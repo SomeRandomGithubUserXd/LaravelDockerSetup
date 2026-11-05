@@ -9,6 +9,7 @@ services:
   worker:
     # queue:listen reloads code for every job, no restarts after edits
     command: php artisan queue:listen --tries=3 --timeout=300
+    stop_grace_period: 10s
     volumes:
       - ./app:/var/www/html
 
@@ -21,6 +22,7 @@ services:
       - ./app/public:/var/www/html/public:ro
 
   vite:
+    env_file: .env
     build:
       context: ./app
       args:
