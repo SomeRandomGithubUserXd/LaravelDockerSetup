@@ -1,0 +1,40 @@
+# local dev only, enabled by COMPOSE_FILE in .env (setup.sh sets it for APP_ENV=local)
+services:
+  app:
+    # no optimize: with live code cached routes/config would go stale
+    command: sh -c "exec php-fpm"
+    volumes:
+      - ./app:/var/www/html             # live code from your machine
+
+  worker:
+    # queue:listen reloads code for every job, no restarts after edits
+    command: php artisan queue:listen --tries=3 --timeout=300
+    volumes:
+      - ./app:/var/www/html
+
+  scheduler:
+    volumes:
+      - ./app:/var/www/html
+
+  web:
+    volumes:
+      - ./app/public:/var/www/html/public:ro
+
+  vite:
+    build:
+      context: ./app
+      args:
+        APP_UID: ${APP_UID}
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./app:/var/www/html
+
+  mysql:
+    ports:
+      - "127.0.0.1:3306:3306"
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
